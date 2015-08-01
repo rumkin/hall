@@ -249,12 +249,12 @@ describe('Router', function(){
         var route = false;
 
         var router = Router();
-        router.filter(function(req, resolve, reject){
+        router.filter(function(req){
             if (req.query.api === '1.0') {
-                resolve();
+                return true;
             } else {
                 filtered = true;
-                reject();
+                return false;
             }
         });
 
@@ -272,6 +272,44 @@ describe('Router', function(){
         should(route).be.ok();
     });
 
+    it('Should call filter and before in proper order', function(){
+        var i = 0;
+        var router = Router();
+        var before1 = 0;
+        var filter = 0;
+        var before2 = 0;
+
+        router.use(function (req, res, next) {
+            before1 = ++i;
+            next();
+        });
+
+        router.filter(function () {
+            filter = ++i;
+            return true;
+        });
+
+        router.use(function (req, res, next) {
+            before2 = ++i;
+            next();
+        });
+
+        router.get('/test', function(req, res, next){
+            next();
+        });
+
+        router({
+            url: '/test',
+            method: 'GET'
+        }, {}, function(err){
+            should(err).be.not.ok();
+        });
+
+        should(before1).be.equal(1);
+        should(filter).be.equal(2);
+        should(before2).be.equal(3);
+    });
+
     it('Should run router factory method', function(){
         var called = false;
 
@@ -281,6 +319,50 @@ describe('Router', function(){
         });
 
         should(called).be.ok();
+    });
+
+    it('Should use own next method', function(){
+        var router = Router();
+        var ended = false;
+
+        router.get('/test', function(req, res, next) {
+            next();
+        });
+
+        router({
+            method: 'GET',
+            url: '/test'
+        }, {
+            end: function(message){
+                ended = true;
+                should(message).be.equal('/test not found.');
+            }
+        });
+
+        should(ended).be.ok();
+    });
+
+    it('Should pass error string to own next method', function(){
+        var router = Router();
+        var ended = false;
+        var error;
+
+        router.get('/test', function(req, res, next) {
+            error = new Error('test');
+            next(error);
+        });
+
+        router({
+            method: 'GET',
+            url: '/test'
+        }, {
+            end: function(message){
+                ended = true;
+                should(message).be.equal(error.stack);
+            }
+        });
+
+        should(ended).be.ok();
     });
 });
 

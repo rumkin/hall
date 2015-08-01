@@ -7,12 +7,23 @@ function createRouter(fn) {
     var before = [];
     var after = [];
     var routes = {};
-    var filters = [];
 
     var router = function(req, res, next){
         var url = req.url;
         if (req.method in routes === false || ! routes[req.method].length) {
             return next();
+        }
+
+        if (arguments.length === 2) {
+            next = function(err) {
+                if (err) {
+                    res.status = 500;
+                    res.end(err.stack);
+                } else {
+                    res.status = 400;
+                    res.end(req.url + ' not found.');
+                }
+            };
         }
 
         var methodRoutes = routes[req.method];
@@ -32,7 +43,7 @@ function createRouter(fn) {
 
         if (i == len) return next();
 
-        var queue = [].concat(filters, before, [route.fn], after);
+        var queue = [].concat(before, [route.fn], after);
 
         function loop(err) {
             var route;
@@ -102,7 +113,7 @@ function createRouter(fn) {
     };
 
     router.filter = function(fn) {
-        filters.push(function(req, res, next){
+        before.push(function(req, res, next){
             var result = fn(req, next, next.skip);
             if (typeof result === 'boolean') {
                 if (result) {
@@ -121,12 +132,26 @@ function createRouter(fn) {
         before = before.concat(
             Array.prototype.slice.call(arguments)
         );
+
+        return this;
     };
 
     router.after = function(fn) {
         after = after.concat(
             Array.prototype.slice.call(arguments)
         );
+
+        return this;
+    };
+
+    router.use = function(fn){
+        if (routes.length) {
+            this.after.apply(this, arguments);
+        } else {
+            this.before.apply(this, arguments);
+        }
+
+        return this;
     };
 
     if (typeof fn === 'function') {
