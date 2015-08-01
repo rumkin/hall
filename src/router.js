@@ -7,6 +7,7 @@ function createRouter(fn) {
     var before = [];
     var after = [];
     var routes = {};
+    var filters = [];
 
     var router = function(req, res, next){
         var url = req.url;
@@ -31,7 +32,7 @@ function createRouter(fn) {
 
         if (i == len) return next();
 
-        var queue = [].concat(before, [route.fn], after);
+        var queue = [].concat(filters, before, [route.fn], after);
 
         function loop(err) {
             var route;
@@ -58,6 +59,11 @@ function createRouter(fn) {
             next(err);
         }
 
+        loop.skip = function(err){
+            queue.length = 0;
+            loop(err);
+        };
+
         loop();
     };
 
@@ -77,6 +83,8 @@ function createRouter(fn) {
                 parser: parser,
                 fn: fn
             });
+
+            return this;
         };
     });
 
@@ -89,6 +97,24 @@ function createRouter(fn) {
                 fn: fn
             });
         });
+
+        return this;
+    };
+
+    router.filter = function(fn) {
+        filters.push(function(req, res, next){
+            var result = fn(req, next, next.skip);
+            if (typeof result === 'boolean') {
+                if (result) {
+                    next();
+                } else {
+                    next.skip();
+                }
+            } else if (result && result instanceof Promise) {
+                result.then(next.bind(null, null), next.skip);
+            }
+        });
+        return this;
     };
 
     router.before = function(fn) {

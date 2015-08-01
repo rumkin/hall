@@ -177,6 +177,120 @@ describe('Router', function(){
         should(before).be.equal(true);
     });
 
+    it('Should filtrate requests with filter', function(){
+        var filtered = false;
+        var before = false;
+        var route = false;
+
+        var router = Router();
+        router.filter(function(req, resolve, reject){
+            if (req.query.api === '1.0') {
+                resolve();
+            } else {
+                filtered = true;
+                reject();
+            }
+        });
+
+        router.before(function(req, res, next){
+            before = true;
+            next();
+        });
+
+        router.get('/test', function(req, res, next){
+            route = true;
+            next();
+        });
+
+        router({method: 'GET', query:{api: '2.0'}, url: '/test'}, {}, function(err){
+            should(err).be.not.ok().and.have.type('undefined');
+        });
+
+        should(filtered).be.ok();
+        should(before).be.not.ok();
+        should(route).be.not.ok();
+    });
+
+    it('Should filtrate requests with boolean', function(){
+        var filtered = true;
+
+
+        var router = Router();
+        router.filter(function(req){
+            return req.query.api === '1.0';
+        });
+
+        router.get('/test', function(req, res, next){
+            filtered = false;
+            next();
+        });
+
+        router({method: 'GET', query:{api: '2.0'}, url: '/test'}, {}, function(err){
+            should(err).be.not.ok().and.have.type('undefined');
+        });
+
+        should(filtered).be.ok();
+    });
+
+    it('Should filtrate requests with promise', function(){
+        var filtered = true;
+
+
+        var router = Router();
+        router.filter(function(req){
+            return new Promise(function(resolve, reject){
+                setImmediate(function(){
+                    req.query.api === '1.0' ? resolve() : reject();
+                });
+            });
+        });
+
+        router.get('/test', function(req, res, next){
+            filtered = false;
+            next();
+        });
+
+        router({method: 'GET', query:{api: '2.0'}, url: '/test'}, {}, function(err){
+            should(err).be.not.ok().and.have.type('undefined');
+        });
+
+        should(filtered).be.ok();
+    });
+
+    it('Should pass requests with filter', function(){
+        var filtered = false;
+        var before = false;
+        var route = false;
+
+        var router = Router();
+        router.filter(function(req, resolve, reject){
+            if (req.query.api === '1.0') {
+                resolve();
+            } else {
+                filtered = true;
+                reject();
+            }
+        });
+
+        router.before(function(req, res, next){
+            before = true;
+            next();
+        });
+
+        router.get('/test', function(req, res, next){
+            route = true;
+            next();
+        });
+
+        router({method: 'GET', query:{api: '1.0'}, url: '/test'}, {}, function(err){
+            should(err).be.not.ok().and.have.type('undefined');
+        });
+
+        should(filtered).be.not.ok();
+        should(before).be.ok();
+        should(route).be.ok();
+    });
+
     it('Should run router factory method', function(){
         var called = false;
 
