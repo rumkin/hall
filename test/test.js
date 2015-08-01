@@ -156,14 +156,10 @@ describe('Router', function(){
 
     it('Should catch internal errors', function(){
         var router = Router();
-        var before = false;
 
-        router.before(function(req, res, next){
-            before = true;
+        router.get('/site/:id', function(req, res, next){
             throw new Error('test');
         });
-
-        router.get('/site/:id', function(){});
 
         router({
             url: '/site/123',
@@ -173,13 +169,10 @@ describe('Router', function(){
                 .and.ownProperty('message')
                 .is.equal('test');
         });
-
-        should(before).be.equal(true);
     });
 
     it('Should filtrate requests with filter', function(){
         var filtered = false;
-        var before = false;
         var route = false;
 
         var router = Router();
@@ -192,11 +185,6 @@ describe('Router', function(){
             }
         });
 
-        router.before(function(req, res, next){
-            before = true;
-            next();
-        });
-
         router.get('/test', function(req, res, next){
             route = true;
             next();
@@ -207,7 +195,6 @@ describe('Router', function(){
         });
 
         should(filtered).be.ok();
-        should(before).be.not.ok();
         should(route).be.not.ok();
     });
 
@@ -259,7 +246,6 @@ describe('Router', function(){
 
     it('Should pass requests with filter', function(){
         var filtered = false;
-        var before = false;
         var route = false;
 
         var router = Router();
@@ -272,10 +258,6 @@ describe('Router', function(){
             }
         });
 
-        router.before(function(req, res, next){
-            before = true;
-            next();
-        });
 
         router.get('/test', function(req, res, next){
             route = true;
@@ -287,7 +269,6 @@ describe('Router', function(){
         });
 
         should(filtered).be.not.ok();
-        should(before).be.ok();
         should(route).be.ok();
     });
 
