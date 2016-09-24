@@ -1,7 +1,7 @@
 {
   "name": "hall",
   "description":"Unified http router middleware",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "repository": "rumkin/hall",
   "devDependencies": {
     "should": "~7.0.2",
@@ -15,6 +15,7 @@
     "test": "node_modules/.bin/mocha test/test.js",
     "cov": "node_modules/.bin/mocha test/test.js -r blanket -R html-cov > tmp/coverage.html"
   },
+  "main": "src/router.js",
   "config": {
     "blanket": {
       "pattern": [
