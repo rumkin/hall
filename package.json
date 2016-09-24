@@ -12,8 +12,8 @@
     "route-parser": "0.0.4"
   },
   "scripts": {
-    "test": "node_modules/.bin/mocha test/test.js",
-    "cov": "node_modules/.bin/mocha test/test.js -r blanket -R html-cov > tmp/coverage.html"
+    "test": "node_modules/.bin/mocha test/**.spec.js",
+    "cov": "node_modules/.bin/mocha test/**.spec.js -r blanket -R html-cov > tmp/coverage.html"
   },
   "main": "src/router.js",
   "config": {

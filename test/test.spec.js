@@ -1,4 +1,4 @@
-var Router = require('../src/router.js');
+var Router = require('..');
 var should = require('should');
 var assert = require('assert');
 
@@ -365,5 +365,3 @@ describe('Router', function(){
         should(ended).be.ok();
     });
 });
-
-
