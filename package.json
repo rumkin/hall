@@ -1,7 +1,7 @@
 {
   "name": "hall",
   "description":"Unified http router middleware",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": "rumkin/hall",
   "devDependencies": {
     "should": "~7.0.2",
