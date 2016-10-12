@@ -1,7 +1,7 @@
 {
   "name": "hall",
-  "description":"Unified http router middleware",
-  "version": "0.1.1",
+  "description": "Unified http router middleware",
+  "version": "0.2.0",
   "repository": "rumkin/hall",
   "devDependencies": {
     "should": "~7.0.2",
@@ -9,7 +9,7 @@
     "blanket": "~1.1.7"
   },
   "dependencies": {
-    "route-parser": "0.0.4"
+    "route-parser": "0.0.5"
   },
   "scripts": {
     "test": "node_modules/.bin/mocha test/**.spec.js",

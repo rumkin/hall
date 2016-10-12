@@ -5,12 +5,35 @@ var assert = require('assert');
 
 describe('Router', function(){
 
-    it('Should match simple route', function(){
+    it('Should match string route', function(){
         var router = Router();
         var got = false;
         var params;
 
         router.get('/site/:id', function(req, res, next){
+            params = req.params;
+            got = true;
+            next();
+        });
+
+        router({
+            url: '/site/123',
+            method: 'GET'
+        }, {}, function(err){
+            should(err).have.type('undefined');
+        });
+
+        assert.deepEqual(params, {id: "123"});
+
+        should(got).be.equal(true);
+    });
+
+    it('Should match route parser route', function(){
+        var router = Router();
+        var got = false;
+        var params;
+
+        router.get(new Router.RouteParser('/site/:id'), function(req, res, next){
             params = req.params;
             got = true;
             next();

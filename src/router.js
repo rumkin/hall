@@ -1,4 +1,6 @@
-var RouteParser = require('route-parser');
+'use strict';
+
+const RouteParser = require('route-parser');
 
 module.exports = createRouter;
 
@@ -10,8 +12,9 @@ function createRouter(fn) {
 
     var router = function(req, res, next){
         var url = req.url;
-        if (req.method in routes === false || ! routes[req.method].length) {
-            return next();
+        if (! routes.hasOwnProperty(req.method) || ! routes[req.method].length) {
+            next();
+            return;
         }
 
         if (arguments.length === 2) {
@@ -41,27 +44,35 @@ function createRouter(fn) {
             }
         }
 
-        if (i == len) return next();
+        if (i === len) {
+            next();
+            return;
+        }
+
 
         var queue = [].concat(before, [route.fn], after);
 
         function loop(err) {
             var route;
+
             if (queue.length) {
                 do {
                     route = queue.shift();
                     try {
                         if (err) {
                             if (route.length > 3) {
-                                return route(err, req, res, loop);
+                                route(err, req, res, loop);
+                                return;
                             }
                         } else {
                             if (route.length < 4) {
-                                return route(req, res, loop);
+                                route(req, res, loop);
+                                return;
                             }
                         }
                     } catch (caught) {
-                        return next(caught);
+                        next(caught);
+                        return;
                     }
 
                 } while(queue.length);
@@ -75,6 +86,7 @@ function createRouter(fn) {
             loop(err);
         };
 
+
         loop();
     };
 
@@ -83,13 +95,16 @@ function createRouter(fn) {
         'POST',
         'DELETE',
         'PUT',
-        'PATCH'
+        'PATCH',
     ];
 
     methods.forEach(function(method){
         routes[method] = [];
         router[method.toLowerCase()] = function (route, fn) {
-            var parser = new RouteParser(route);
+            var parser = route instanceof RouteParser
+                ? route
+                : new RouteParser(route);
+
             routes[method].push({
                 parser: parser,
                 fn: fn
@@ -100,7 +115,9 @@ function createRouter(fn) {
     });
 
     router.all = function(route, fn) {
-        var parser = new RouteParser(route);
+        var parser = route instanceof RouteParser
+            ? route
+            : new RouteParser(route);
 
         methods.forEach(function(method){
             routes[method].push({
@@ -160,3 +177,5 @@ function createRouter(fn) {
 
     return router;
 }
+
+createRouter.RouteParser = RouteParser;

@@ -75,6 +75,41 @@ router.get('/product/:id', (req, res, next) => {
 });
 ```
 
+### HTTP Methods
+
+Methods to bind http methods routes. There is several supported HTTP methods:
+
+* `GET`
+* `POST`
+* `PUT`
+* `DELETE`
+* `PATCH`
+
+Each HTTP-method has it's own lowercased alias:
+
+```javascript
+router.get('/', (req, res, next) => {
+  // ...
+});
+
+router.post('/', (req, res, next) => {
+  // ...
+});
+
+router.patch('/', (req, res, next) => {
+  // ...
+});
+```
+
+Also route could be instance of `hall.RouteParser`:
+
+```javascript
+router.get(new hall.RouteParser('/some/:id'), (req, res, next) => {
+  // ...
+});
+```
+
+
 ### Filter
 
 Filter method allow to filter requests in smarter way. It's using for dynamic request filtering. Filter method should
