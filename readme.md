@@ -84,6 +84,7 @@ Methods to bind http methods routes. There is several supported HTTP methods:
 * `PUT`
 * `DELETE`
 * `PATCH`
+* `HEAD`
 
 Each HTTP-method has it's own lowercased alias:
 

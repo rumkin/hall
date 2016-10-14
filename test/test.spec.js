@@ -72,21 +72,33 @@ describe('Router', function(){
 
     it('Should match any methods for all', function(){
         var router = Router();
-        var got = false;
+        var got;
 
         router.all('/site/:id', function(req, res, next){
             got = true;
             next();
         });
 
-        router({
+        [
+          'GET',
+          'POST',
+          'DELETE',
+          'PUT',
+          'PATCH',
+          'HEAD',
+        ].forEach(function (method) {
+          got = false;
+
+          router({
             url: '/site/123',
-            method: 'POST'
-        }, {}, function(err){
+            method: method,
+          }, {}, function(err){
             should(err).have.type('undefined');
+          });
+
+          should(got).be.equal(true);
         });
 
-        should(got).be.equal(true);
     });
 
     it('Should match run before method', function(){

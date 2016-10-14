@@ -96,6 +96,7 @@ function createRouter(fn) {
         'DELETE',
         'PUT',
         'PATCH',
+        'HEAD',
     ];
 
     methods.forEach(function(method){
