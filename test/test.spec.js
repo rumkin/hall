@@ -28,6 +28,98 @@ describe('Router', function(){
         should(got).be.equal(true);
     });
 
+    it('Should match resource defined with object', function(){
+        var router = Router();
+        var got = false;
+        var params;
+
+        router.resource('/site/:id', {
+            get(req, res, next){
+                params = req.params;
+                got = true;
+                next();
+            }
+        });
+
+        router({
+            url: '/site/123',
+            method: 'GET'
+        }, {}, function(err){
+            should(err).have.type('undefined');
+        });
+
+        assert.deepEqual(params, {id: "123"});
+
+        should(got).be.equal(true);
+    });
+
+    it('Should match resource defined with methods', function(){
+        var router = Router();
+        var got = false;
+        var params;
+
+        router.resource('/site/:id')
+        .get(function (req, res, next){
+            params = req.params;
+            got = true;
+            next();
+        });
+
+        router({
+            url: '/site/123',
+            method: 'GET'
+        }, {}, function(err){
+            should(err).have.type('undefined');
+        });
+
+        assert.deepEqual(params, {id: "123"});
+
+        should(got).be.equal(true);
+    });
+
+    it('Should redefine methods with same route', function(){
+        var router = Router();
+
+        var A = function() {};
+        var B = function() {};
+
+        router.resource('/site/:id')
+        .get(A);
+
+        router.resource('/site/:id')
+        .get(B);
+
+        should(router.resource('/site/:id').getHandler('get')).be.equal(B);
+    });
+
+    it('Should send 405 error if resource method is missing', function(){
+        var router = Router();
+
+        router.resource('/site/:id')
+        .post((req, res, next) => {});
+
+        var response = {
+            headers: {},
+            setHeader(header, value) {
+                this.headers[header] = value;
+            },
+            end() {
+                this.finished = true;
+            }
+        };
+
+        router({
+            url: '/site/123',
+            method: 'GET'
+        }, response, function(err){
+            should(err).have.type('undefined');
+        });
+
+        should(response.finished).be.equal(true);
+        should(response.statusCode).be.equal(405);
+        should(response.headers.allow).be.equal('POST');
+    });
+
     it('Should match route parser route', function(){
         var router = Router();
         var got = false;

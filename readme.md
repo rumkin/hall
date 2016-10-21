@@ -1,7 +1,8 @@
 # Hall
 
-Unified HTTP middleware router. It works with express, connect and native http server. It's goal is provide routring
-for distributable and modular web applications.
+Unified HTTP middleware router. It works with express, connect and native http
+server. It's goal is provide routring for distributable and modular
+web applications and support standard behavior.
 
 ![Travis](https://img.shields.io/travis/rumkin/hall/master.svg)
 
@@ -38,6 +39,18 @@ const connect = require('connect');
 // Router instance
 const router = hall();
 
+router.resource('/products/:id')
+.get((req, res, next) => {
+    // Return product...
+})
+.put((req, res, next) => {
+    // Update product...
+})
+.delete((req, res, next) => {
+    // Delete product...
+});
+
+
 router.get('/products/:id/reviews', (req, res) => {
     // ...
 });
@@ -45,10 +58,41 @@ router.get('/products/:id/reviews', (req, res) => {
 connect().use(router);
 ```
 
-## Methods
+Resources are differs from single routes. It processing before routes. If
+resource exists but method not defined than response gets 405 status code
+(method not allowed).
 
-Router has methods `before`, `after`, `filter` and `use`. This methods allow to control process of request preprocessing
-and filtering.
+## API
+
+### router.resource(route: string[, handlers: Object]) => Resource
+
+Add resource. If route is defined return existing resource instance. If handlers
+is an object use property names as methods names and values as a handlers:
+
+```javascript
+router.resource('/users/:id')
+.get((req, res, next) => {
+    // ...
+})
+.put((req, res, next) => {
+    // ...
+});
+
+router.resource('/docs/:id', {
+    get(req, res, next) {
+        // get...
+    },
+    delete(req, res, next) {
+        // delete...
+    }
+});
+```
+
+### Methods
+
+Router has methods `before`, `after`, `filter` and `use`. This methods allow
+to control process of request preprocessing and filtering. Note that before and after
+handlers will not be called if there is no matching routes.
 
 ```javascript
 

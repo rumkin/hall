@@ -1,32 +1,42 @@
 'use strict';
 
 const RouteParser = require('route-parser');
+const Resource = require('./resource.js');
 
 module.exports = createRouter;
 
 function createRouter(fn) {
-
     var before = [];
     var after = [];
     var routes = {};
+    var resources = new Map();
 
-    var router = function(req, res, next){
+    function matchResources(req, res) {
+        const url = req.url;
+        const method = req.method;
+
+        for(let resource of resources.values()) {
+            let match = resource.match(url);
+            if (match) {
+                if (! resource.hasHandler(method)) {
+                    res.statusCode = 405;
+                    res.statusText = 'Method not allowed';
+                    res.setHeader('allow', resource.listMethods().join(','));
+                    res.end();
+                    return;
+                }
+
+                req.params = match;
+
+                return [...before, resource.getHandler(method), ...after];
+            }
+        }
+    }
+
+    function matchMethods(req) {
         var url = req.url;
         if (! routes.hasOwnProperty(req.method) || ! routes[req.method].length) {
-            next();
             return;
-        }
-
-        if (arguments.length === 2) {
-            next = function(err) {
-                if (err) {
-                    res.status = 500;
-                    res.end(err.stack);
-                } else {
-                    res.status = 400;
-                    res.end(req.url + ' not found.');
-                }
-            };
         }
 
         var methodRoutes = routes[req.method];
@@ -40,17 +50,36 @@ function createRouter(fn) {
 
             if (match) {
                 req.params = match;
-                break;
+                return [...before, route.fn, ...after];
             }
         }
+    }
 
-        if (i === len) {
-            next();
-            return;
+    var router = function(req, res, next_){
+        var next;
+        if (arguments.length === 2) {
+            next = router.defaultNext(req, res);
+        }
+        else {
+            next = next_;
         }
 
+        var queue;
 
-        var queue = [].concat(before, [route.fn], after);
+        queue = matchResources(req, res);
+
+        if (! queue) {
+            if (res.finished) {
+                return;
+            }
+
+            queue = matchMethods(req, res);
+
+            if (! queue) {
+                next();
+                return;
+            }
+        }
 
         function loop(err) {
             var route;
@@ -172,6 +201,30 @@ function createRouter(fn) {
         return this;
     };
 
+    router.resource = function(route, handlers) {
+        let route_ = normalizeRoute(route);
+        let resource;
+        if (resources.has(route_)) {
+            resource = resources.get(route_);
+        }
+        else {
+            resource = new Resource(route_);
+            resources.set(route_, resource);
+        }
+
+        if (handlers) {
+            Object.getOwnPropertyNames(handlers)
+            .forEach(function(method){
+                resource.addHandler(method, handlers[method]);
+            });
+        }
+
+
+        return resource;
+    }
+
+    router.defaultNext = createRouter.defaultNext;
+
     if (typeof fn === 'function') {
         fn(router);
     }
@@ -179,4 +232,40 @@ function createRouter(fn) {
     return router;
 }
 
+/**
+ * Final middleware factory. Calling when no request found.
+ *
+ * @param  {http.ServerRequest} req Http request instance.
+ * @param  {http.ServerResponse} res Http response instance.
+ * @return {function(Error)}
+ */
+function defaultNext(req, res) {
+    return function(err) {
+        if (err) {
+            res.status = 500;
+            res.end(err.stack);
+        } else {
+            res.status = 400;
+            res.end(req.url + ' not found.');
+        }
+    };
+}
+
+/**
+ * Normalize route. Replace trailing slash from the end of route. Replace
+ * duplicated slashes, etc.
+ *
+ * @param  {string} route Route string
+ * @return {string}       Normalized route string.
+ */
+function normalizeRoute(route) {
+    route = route.replace(/\/+$/, '');
+    route = route.replace(/^\/+/, '/');
+
+    return route;
+}
+
+
+createRouter.defaultNext = defaultNext;
 createRouter.RouteParser = RouteParser;
+createRouter.Resource = Resource;
