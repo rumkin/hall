@@ -126,6 +126,8 @@ function createRouter(fn) {
         'PUT',
         'PATCH',
         'HEAD',
+        'OPTIONS',
+        'CONFIRM',
     ];
 
     methods.forEach(function(method){

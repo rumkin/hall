@@ -178,6 +178,8 @@ describe('Router', function(){
           'PUT',
           'PATCH',
           'HEAD',
+          'OPTIONS',
+          'CONFIRM',
         ].forEach(function (method) {
           got = false;
 

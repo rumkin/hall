@@ -46,6 +46,11 @@ class Resource {
         return this;
     }
 
+    confirm(handler) {
+        this.addHandler('confirm', handler);
+        return this;
+    }
+
     post(handler) {
         this.addHandler('post', handler);
         return this;
