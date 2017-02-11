@@ -1,8 +1,6 @@
 var
 tmp
-example
 misc
-src
 
 .dockerignore
 .editorconfig
